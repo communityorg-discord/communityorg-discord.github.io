@@ -83,7 +83,7 @@ p.stage{color:var(--ink-3);font-style:italic;margin:0 0 12px;font-size:14px}
   .videocard,.chartcard{grid-template-columns:auto 1fr;grid-template-rows:auto auto}
   .videocard .dl,.chartcard .dl{grid-column:1/-1;justify-self:stretch;text-align:center}
 }</style></head><body>
-<button type="button" class="savepdf" onclick="window.print()">Save PDF</button>
+<button type="button" class="savepdf" id="savepdf">Save PDF</button>
 <div class="sheet">
   <div class="mast">
     <div class="crest"><div class="mk">F</div><div class="nm">Fortnite Sprite Info &amp; Trading<small>Staff meeting · handout</small></div></div>
@@ -137,4 +137,26 @@ That&#39;s Utilities. Dion will explain Spritely.</p><h2><span class="n">05</spa
     
   </div>
   <div class="foot"><span>What was said.</span><span>Fortnite Sprite Info &amp; Trading</span></div>
-</div></body></html>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<script>
+(function () {
+  var btn = document.getElementById('savepdf');
+  var sheet = document.querySelector('.sheet');
+  if (!btn || !sheet) return;
+  btn.addEventListener('click', function () {
+    if (!window.html2pdf) return;
+    btn.disabled = true;
+    var name = (document.title || 'staff-meeting').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '.pdf';
+    window.html2pdf().set({
+      margin: [12, 10, 12, 10],
+      filename: name,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0b0a11' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['h2', '.qa-', '.videocard', '.chartcard', '.rem'] }
+    }).from(sheet).save().then(function () { btn.disabled = false; }, function () { btn.disabled = false; });
+  });
+})();
+</script>
+</body></html>
