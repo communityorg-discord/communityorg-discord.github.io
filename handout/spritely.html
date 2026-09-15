@@ -1,0 +1,1194 @@
+<title>Spritely — the full tour</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#0C0A12; --disc:#313338; --disc-2:#2B2D31; --disc-3:#1E1F22; --disc-4:#232428;
+    --ink:#F3F1FA; --ink-2:#B9B2CD; --ink-3:#847C99; --rule:#2A2540;
+    --spritely:#9C7BFF; --spritely-deep:#6C4CE0; --util:#4A8CFF; --util-deep:#2C63D6;
+    --good:#3BA55D; --warn:#E8B25F; --bad:#ED4245;
+    --pink:#FF3D8B; --gold:#FFC93C;
+    --f-display:"Bricolage Grotesque","Trebuchet MS",Arial,sans-serif;
+    --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:#000;color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-font-smoothing:antialiased}
+
+  /* ---- the letterboxed stage ---- */
+  .frame{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(120% 120% at 50% 0%,#151026 0%,#0A0810 60%,#050409 100%)}
+  .screen{position:relative;width:min(100vw,177.78vh);height:min(56.25vw,100vh);overflow:hidden;background:var(--bg);font-size:12.8px}
+  .scene{position:absolute;inset:0;display:none;padding:3.4em 5em 4.8em}
+  .scene.on{display:flex;flex-direction:column;justify-content:safe center}
+  .scene .inner{width:100%;margin:0 auto}
+  .scene::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 85% 10%,color-mix(in srgb,var(--accent,#9C7BFF) 14%,transparent),transparent 70%)}
+
+  /* ---- motion primitives, gated on .playing ---- */
+  .in{opacity:0;transform:translateY(1.1em);animation:rise .62s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--t,0s) + var(--off,0s));animation-play-state:paused}
+  .in.left{transform:translateX(-1.6em)}
+  .in.pop{transform:scale(.94)}
+  .in.still{transform:none}
+  .playing .scene.on .in{animation-play-state:running}
+  @keyframes rise{to{opacity:1;transform:none}}
+  /* an element that arrives and later steps back: two animations, two delays */
+  .in.out{animation:rise .62s cubic-bezier(.2,.7,.2,1) both, fadeout .45s ease both;
+    animation-delay:calc(var(--t,0s) + var(--off,0s)), calc(var(--t2,0s) + var(--off,0s));animation-play-state:paused}
+  .playing .scene.on .in.out{animation-play-state:running}
+  @keyframes fadeout{to{opacity:0;height:0;padding-top:0;padding-bottom:0;margin-top:0;overflow:hidden;border-width:0}}
+
+  .type{display:inline-block;overflow:hidden;white-space:pre;vertical-align:bottom;width:0;
+    animation:typing calc(var(--n) * .075s) steps(var(--n)) both;animation-delay:calc(var(--t,0s) + var(--off,0s));animation-play-state:paused}
+  .playing .scene.on .type{animation-play-state:running}
+  @keyframes typing{to{width:calc(var(--n) * 1ch)}}
+
+  .bar{width:0;animation:grow 1.1s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--t,0s) + var(--off,0s));animation-play-state:paused}
+  .playing .scene.on .bar{animation-play-state:running}
+  @keyframes grow{to{width:var(--w)}}
+
+  .press{animation:press .5s ease both;animation-delay:calc(var(--t,0s) + var(--off,0s));animation-play-state:paused}
+  .playing .scene.on .press{animation-play-state:running}
+  @keyframes press{0%{box-shadow:0 0 0 0 #fff0}40%{box-shadow:0 0 0 .35em #ffffff55;filter:brightness(1.25)}100%{box-shadow:0 0 0 0 #fff0}}
+
+  .dots{display:inline-flex;gap:.3em;align-items:center;padding:.3em .1em;color:var(--ink-3);font-size:.9em}
+  .dots i{width:.5em;height:.5em;border-radius:50%;background:#8a8f98;display:inline-block;animation:blink 1.1s infinite;animation-play-state:paused}
+  .dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
+  .playing .scene.on .dots i{animation-play-state:running}
+  @keyframes blink{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-.15em)}}
+
+  /* ---- type ---- */
+  .eyebrow{font-family:var(--f-mono);font-size:1.05em;letter-spacing:.22em;text-transform:uppercase;color:var(--accent,#9C7BFF);margin:0 0 1.1em}
+  h1{font-family:var(--f-display);font-weight:800;font-size:6.4em;line-height:.98;letter-spacing:-.025em;margin:0;text-wrap:balance}
+  h2{font-family:var(--f-display);font-weight:800;font-size:3.15em;line-height:1.02;letter-spacing:-.02em;margin:0 0 .35em;text-wrap:balance}
+  h3{font-family:var(--f-display);font-weight:600;font-size:1.7em;margin:0 0 .3em;letter-spacing:-.01em}
+  .lead{font-size:1.85em;color:var(--ink-2);max-width:26ch;line-height:1.35}
+  .big{font-size:1.55em;line-height:1.4;max-width:30ch;color:var(--ink-2)}
+  p{color:var(--ink-2);line-height:1.5;margin:0}
+  .mono{font-family:var(--f-mono)}
+  .accent{color:var(--accent,#9C7BFF)}
+  .kick{font-family:var(--f-mono);font-size:1em;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .note{font-size:1.1em;color:var(--ink-2);line-height:1.45;max-width:36ch}
+  .note b{color:var(--ink)}
+  .row{display:flex;gap:3.4em;align-items:center}
+  .row.top{align-items:flex-start}
+  .col{flex:1 1 0;min-width:0}
+  .stack{display:grid;gap:1.1em}
+  code,.code{font-family:var(--f-mono);background:#ffffff12;padding:.05em .35em;border-radius:.3em;font-size:.95em;color:#e8e3f7}
+  .list{display:grid;gap:.75em}
+  .list .li{display:grid;grid-template-columns:1.6em 1fr;gap:.6em;align-items:start;font-size:1.12em;color:var(--ink-2);line-height:1.4}
+  .list .li .n{font-family:var(--f-mono);color:var(--accent,#9C7BFF)}
+  .list .li b{color:var(--ink)}
+
+  /* ---- Discord chrome ---- */
+  .dc{background:var(--disc);border-radius:.7em;padding:.9em 1em;font-size:1.05em;box-shadow:0 1.6em 4em rgba(0,0,0,.55);border:1px solid #00000050;position:relative;overflow:hidden}
+  .dc.sm{font-size:.94em}
+  .dc-head{display:flex;align-items:center;gap:.6em;color:#949ba4;font-family:var(--f-body);font-weight:600;font-size:.86em;padding:0 0 .55em;border-bottom:1px solid #1f2023;margin-bottom:.6em}
+  .dc-head .hash{color:#80848e;font-weight:700;font-size:1.25em}
+  .dc-head .dm{color:#dbdee1}
+  .dc-head .tick{margin-left:auto;font-size:.8em;color:#5c6069;font-weight:500}
+  .msg{display:flex;gap:.75em;margin:.55em 0}
+  .av{width:2.5em;height:2.5em;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:.9em;color:#fff;font-family:var(--f-display)}
+  .av.bot{background:linear-gradient(150deg,#9C7BFF,#6C4CE0)}
+  .av.botu{background:linear-gradient(150deg,#4A8CFF,#2C63D6)}
+  .av.p1{background:#5865F2}.av.p2{background:#3BA55D}.av.p3{background:#FAA61A}.av.p4{background:#EB459E}.av.p5{background:#57F287;color:#111}
+  .mb{min-width:0;flex:1}
+  .mname{font-weight:600;color:#f2f3f5;font-size:.95em}
+  .mname .tag{background:#5865F2;color:#fff;font-size:.62em;padding:.05em .38em;border-radius:.25em;margin-left:.4em;vertical-align:middle;font-family:var(--f-body);font-weight:700;letter-spacing:.02em}
+  .mtime{color:#949ba4;font-size:.72em;margin-left:.5em;font-weight:400}
+  .mtext{color:#dbdee1;margin-top:.1em;line-height:1.4}
+  .used{color:#949ba4;font-size:.78em;margin-bottom:.15em}
+  .used b{color:#dbdee1;font-weight:500}
+  .used .cmd{color:#c9cdfb;font-weight:600}
+  .eph{color:#949ba4;font-size:.74em;margin-top:.35em}
+  .eph .eye{color:#8a8f98}
+  .embed{border-left:.28em solid var(--ebar,#FF3D8B);background:var(--disc-2);border-radius:.3em;padding:.6em .85em .7em;margin-top:.35em;max-width:34em;color:#dbdee1}
+  .embed .ea{font-size:.78em;font-weight:600;color:#f2f3f5;margin-bottom:.2em}
+  .embed .et{font-weight:700;color:#fff;margin-bottom:.3em;font-size:1em}
+  .embed .ed{font-size:.92em;line-height:1.45;white-space:pre-wrap}
+  .embed .ed b{color:#fff}
+  .embed .ef{display:inline-block;margin:.55em 1.3em 0 0;vertical-align:top}
+  .embed .ef.block{display:block;margin-right:0}
+  .embed .ef .k{color:#f2f3f5;font-size:.82em;font-weight:700;margin-bottom:.1em}
+  .embed .ef .v{color:#dbdee1;font-size:.9em;line-height:1.4;white-space:pre-wrap}
+  .embed .efoot{color:#949ba4;font-size:.74em;margin-top:.6em}
+  .embed .thumb{float:right;width:4.4em;height:4.4em;border-radius:.4em;margin:0 0 .4em .8em;background:radial-gradient(circle at 35% 30%,#ffd76a,#e8912a 55%,#7a3f0c);box-shadow:inset 0 0 0 .2em #0002}
+  .embed .thumb.violet{background:radial-gradient(circle at 35% 30%,#c9b6ff,#9C7BFF 55%,#3d2a8a)}
+  .embed .thumb.round{border-radius:50%}
+  .embed .img{margin-top:.6em;border-radius:.4em;overflow:hidden;background:#0B0420;border:1px solid #2A2350}
+  .pre{font-family:var(--f-mono);font-size:.8em;line-height:1.38;background:var(--disc-3);border:1px solid #1a1b1e;border-radius:.35em;padding:.55em .7em;white-space:pre;overflow:hidden;color:#dbdee1;margin:.35em 0}
+  .btns{display:flex;gap:.55em;margin-top:.6em;flex-wrap:wrap}
+  .btn{font-family:var(--f-body);font-weight:500;font-size:.86em;padding:.5em .95em;border-radius:.25em;color:#fff;border:0;line-height:1.2;display:inline-flex;align-items:center;gap:.4em}
+  .btn.pri{background:#5865F2}.btn.grn{background:#248046}.btn.red{background:#da373c}.btn.grey{background:#4e5058}
+  .btn.off{opacity:.45}
+  .sel{background:var(--disc-3);border:1px solid #111214;border-radius:.3em;padding:.55em .8em;color:#949ba4;font-size:.88em;display:flex;justify-content:space-between;align-items:center;margin-top:.55em;max-width:34em}
+  .sel.picked{color:#f2f3f5}
+  .sel .chev{color:#b5bac1;font-size:.9em}
+  .sel-list{background:var(--disc-2);border:1px solid #111214;border-radius:.3em;max-width:34em;overflow:hidden;font-size:.86em;box-shadow:0 .6em 1.5em #0008;margin-top:.2em}
+  .sel-list .o{padding:.5em .8em;color:#dbdee1;border-bottom:1px solid #ffffff08;display:flex;justify-content:space-between;gap:1em}
+  .sel-list .o small{color:#949ba4;font-size:.82em}
+  .sel-list .o.hi{background:#ffffff10;color:#fff}
+  .sel-list .o.on::before{content:"☑";margin-right:.5em;color:#5865F2}
+  .sel-list .o.off::before{content:"☐";margin-right:.5em;color:#6d7178}
+  .composer{background:#383a40;border-radius:.5em;padding:.6em .9em;font-family:var(--f-body);color:#dbdee1;display:flex;align-items:center;gap:.6em;margin-top:.7em;font-size:.95em;min-height:2.3em}
+  .composer .plus{width:1.4em;height:1.4em;border-radius:50%;background:#b5bac1;color:#383a40;display:grid;place-items:center;font-weight:800;font-size:.85em;flex:none}
+  .composer .type{font-family:var(--f-mono);color:#f2f3f5}
+  .composer .caret{width:.08em;height:1.15em;background:#dbdee1;display:inline-block;animation:caret 1s steps(1) infinite;vertical-align:bottom;animation-play-state:paused}
+  .playing .scene.on .composer .caret{animation-play-state:running}
+  @keyframes caret{50%{opacity:0}}
+  .pill{display:inline-block;background:#5865F2;color:#fff;border-radius:.25em;padding:.05em .4em;font-family:var(--f-mono);font-size:.9em}
+  .ac{background:var(--disc-2);border:1px solid #111214;border-radius:.5em;margin-top:.5em;overflow:hidden;max-width:34em;box-shadow:0 .8em 2em #000a}
+  .ac .h{font-size:.72em;letter-spacing:.06em;text-transform:uppercase;color:#949ba4;padding:.55em .9em .3em;font-weight:700}
+  .ac .opt{padding:.45em .9em;font-family:var(--f-body);font-size:.88em;color:#dbdee1;display:flex;justify-content:space-between;gap:1em;align-items:baseline}
+  .ac .opt .c{font-family:var(--f-mono);color:#fff}
+  .ac .opt .d{color:#949ba4;font-size:.85em}
+  .ac .opt.hi{background:#ffffff12}
+  .ac .opt .ap{margin-left:auto;color:#949ba4;font-size:.8em}
+  .modal{background:var(--disc);border-radius:.5em;padding:1em 1.1em;max-width:30em;box-shadow:0 1.2em 3em #000c;border:1px solid #00000060}
+  .modal .mt{font-weight:700;color:#fff;font-size:1.05em;margin-bottom:.7em}
+  .modal .ml{font-size:.78em;font-weight:700;color:#b5bac1;text-transform:uppercase;letter-spacing:.03em;margin:.6em 0 .3em}
+  .modal .mi{background:var(--disc-3);border-radius:.25em;padding:.55em .7em;color:#dbdee1;font-size:.95em}
+  .modal .mi .ph{color:#6d7178}
+  .modal .mbtns{display:flex;justify-content:flex-end;gap:.6em;margin-top:.9em}
+
+  /* the board picture the bot draws */
+  .board{background:#0B0420;color:#EDE7FF;padding:.7em .8em;font-family:var(--f-body);font-size:.86em}
+  .board .bh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5em}
+  .board .bh b{font-family:var(--f-display);font-size:1.25em;letter-spacing:-.01em}
+  .board .bh span{color:#8B82B8;font-size:.85em}
+  .board .chips{display:flex;gap:.4em;margin-bottom:.55em}
+  .board .chips i{font-style:normal;background:#141033;border:1px solid #2A2350;border-radius:.3em;padding:.2em .55em;font-size:.82em;color:#EDE7FF}
+  .board .br{display:grid;grid-template-columns:2em 7em 1fr;gap:.6em;align-items:center;background:#141033;border:1px solid #2A2350;border-radius:.35em;padding:.35em .5em;margin-bottom:.3em}
+  .board .br .art{width:1.7em;height:1.7em;border-radius:.3em;background:radial-gradient(circle at 35% 30%,#ffd76a,#e8912a 60%,#7a3f0c)}
+  .board .br .art.b{background:radial-gradient(circle at 35% 30%,#a8f0ff,#2BE8FF 60%,#0d6b7a)}
+  .board .br .art.c{background:radial-gradient(circle at 35% 30%,#e3b3ff,#C42BFF 60%,#4d0d6e)}
+  .board .br .nm{font-weight:600;font-size:.9em}.board .br .nm small{display:block;color:#8B82B8;font-weight:400;font-size:.78em}
+  .board .br .fm{display:flex;gap:.35em;justify-content:flex-end}
+  .board .br .fm i{font-style:normal;font-size:.72em;padding:.2em .5em;border-radius:.3em;border:1px solid #2A2350;color:#8B82B8}
+  .board .br .fm i.h{background:#2BE8FF22;border-color:#2BE8FF;color:#EDE7FF}
+  .board .br .fm i.m{background:#FFC93C22;border-color:#FFC93C;color:#FFE9A8}
+
+  /* ---- the catalogue grid ---- */
+  .cat{display:grid;grid-template-columns:9em repeat(4,4.8em);gap:.35em;font-size:1.24em;align-content:start}
+  .cat .ch{font-family:var(--f-mono);font-size:.8em;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:center;padding-bottom:.3em}
+  .cat .rn{font-family:var(--f-body);font-weight:500;color:var(--ink-2);font-size:.92em;display:flex;align-items:center;gap:.5em}
+  .cat .rn i{font-style:normal;font-size:.7em;font-family:var(--f-mono);color:var(--ink-3)}
+  .cat .cell{height:1.9em;border-radius:.35em;background:#ffffff0c;border:1px solid #ffffff10;display:grid;place-items:center;font-size:.95em;opacity:0;transform:scale(.7);animation:cellin .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--t,0s) + var(--off,0s));animation-play-state:paused}
+  .playing .scene.on .cat .cell{animation-play-state:running}
+  @keyframes cellin{to{opacity:1;transform:none}}
+  .cat .cell.yes{background:color-mix(in srgb,var(--spritely) 22%,transparent);border-color:color-mix(in srgb,var(--spritely) 55%,transparent);color:#e6dcff}
+  .cat .cell.no{background:#ffffff05;border-style:dashed;color:#4f4866}
+  .cat .cell.ix{background:#3BA55D33;border-color:#3BA55D}
+  .cat .cell.ms{background:#FFC93C33;border-color:#FFC93C}
+
+  /* ---- stat tiles ---- */
+  .tiles{display:flex;gap:2.2em;flex-wrap:wrap}
+  .tstat b{font-family:var(--f-display);font-weight:800;font-size:4.6em;line-height:1;letter-spacing:-.02em;display:block}
+  .tstat span{color:var(--ink-3);font-size:1.05em;margin-top:.4em;display:block}
+
+  /* ---- leaderboard bars ---- */
+  .lb{display:grid;gap:.7em}
+  .lb .lr{display:grid;grid-template-columns:2em 8em 1fr auto;gap:.8em;align-items:center;font-size:1.1em}
+  .lb .rk{font-family:var(--f-mono);color:var(--ink-3)}
+  .lb .who{color:var(--ink);font-weight:600}
+  .lb .track{height:1.5em;background:#ffffff10;border-radius:.4em;overflow:hidden}
+  .lb .bar{height:100%;background:linear-gradient(90deg,#6C4CE0,#9C7BFF);border-radius:.4em}
+  .lb .val{font-family:var(--f-mono);font-size:.9em;color:var(--ink-2)}
+
+  /* ---- timeline / flow ---- */
+  .flow{display:flex;align-items:stretch;gap:1.6em}
+  .step{flex:1;background:#ffffff08;border:1px solid var(--rule);border-radius:.8em;padding:1em 1.1em;position:relative}
+  .step::after{content:"";position:absolute;right:-1.2em;top:50%;width:.9em;height:2px;background:var(--accent,#9C7BFF)}
+  .step:last-child::after{display:none}
+  .step .n{font-family:var(--f-mono);color:var(--accent,#9C7BFF);font-size:.85em;letter-spacing:.1em}
+  .step h4{margin:.3em 0 .3em;font-size:1.3em;font-weight:600;font-family:var(--f-body)}
+  .step p{font-size:1em;color:var(--ink-3)}
+  .tl{position:relative;padding-left:1.6em;display:grid;gap:.9em}
+  .tl::before{content:"";position:absolute;left:.45em;top:.3em;bottom:.3em;width:2px;background:#ffffff18}
+  .tl .ev{position:relative}
+  .tl .ev::before{content:"";position:absolute;left:-1.6em;top:.35em;width:.95em;height:.95em;border-radius:50%;background:var(--accent,#9C7BFF);box-shadow:0 0 0 .3em #0C0A12}
+  .tl .ev .w{font-family:var(--f-mono);font-size:.9em;color:var(--accent,#9C7BFF);letter-spacing:.05em}
+  .tl .ev h4{margin:.1em 0 .15em;font-size:1.35em;font-weight:600;font-family:var(--f-body)}
+  .tl .ev p{font-size:.95em;color:var(--ink-3);max-width:36ch}
+
+  /* org tree */
+  .tree{display:grid;gap:1em;justify-items:center}
+  .tree .lvl{display:flex;gap:1em;justify-content:center;flex-wrap:wrap}
+  .seat{background:#ffffff0a;border:1px solid var(--rule);border-radius:.6em;padding:.6em .9em;min-width:11em;text-align:center}
+  .seat .t{font-size:.95em;font-weight:600;color:var(--ink)}
+  .seat .p{font-family:var(--f-mono);font-size:.78em;color:var(--ink-3);margin-top:.15em}
+  .seat.head{border-color:var(--accent,#9C7BFF);background:color-mix(in srgb,var(--accent,#9C7BFF) 14%,transparent)}
+  .seat .hat{display:inline-block;font-size:.7em;background:#4A8CFF33;border:1px solid #4A8CFF;color:#cfe0ff;border-radius:.3em;padding:.05em .4em;margin-top:.3em;font-family:var(--f-mono)}
+  .wire{width:2px;height:1em;background:#ffffff22}
+
+  /* generic pieces */
+  .card{background:#ffffff08;border:1px solid var(--rule);border-radius:.9em;padding:1.1em 1.3em}
+  .card h4{margin:0 0 .3em;font-size:1.3em;font-weight:600;font-family:var(--f-body)}
+  .card p{font-size:1.05em;color:var(--ink-3)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1.4em}
+  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.4em}
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.8em;letter-spacing:.08em;text-transform:uppercase;padding:.25em .6em;border-radius:.3em;border:1px solid var(--accent,#9C7BFF);color:var(--accent,#9C7BFF)}
+  .glyph{width:5.6em;height:5.6em;border-radius:1.4em;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:2.8em;color:#fff;background:linear-gradient(150deg,#9C7BFF,#6C4CE0);box-shadow:0 1em 3em #6C4CE066}
+  .glyph.sm{width:3em;height:3em;font-size:1.6em;border-radius:.8em}
+  .marks{display:flex;gap:1.2em;flex-wrap:wrap}
+  /* work-in-progress strip: the Sprite Operations scenes show where it is going, not a finished thing */
+  .wip{display:flex;align-items:center;gap:.9em;background:color-mix(in srgb,var(--warn) 16%,transparent);border:1px solid var(--warn);border-radius:.6em;padding:.6em 1em;color:var(--ink);font-size:1.15em;line-height:1.35}
+  .wip b{font-family:var(--f-mono);font-size:.8em;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);white-space:nowrap}
+  .wip.sm{font-size:.95em;padding:.45em .8em}
+  .mk{display:flex;align-items:center;gap:.5em;font-size:1.15em;color:var(--ink-2)}
+  .mk i{font-style:normal;font-size:1.3em}
+
+  /* ---- transport ---- */
+  .hud{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;gap:14px;padding:14px 20px 16px;background:linear-gradient(0deg,rgba(0,0,0,.8),transparent);opacity:1;transition:opacity .4s}
+  .frame.idle .hud,.frame.idle .chip-title{opacity:0}
+  .ctrl{width:40px;height:40px;border-radius:50%;border:1px solid #ffffff22;background:#ffffff12;color:#fff;font-size:15px;cursor:pointer;display:grid;place-items:center;flex:none;font-family:var(--f-mono)}
+  .ctrl:hover{background:#ffffff22}
+  .scrub{flex:1;height:6px;border-radius:6px;background:#ffffff22;position:relative;cursor:pointer}
+  .scrub .prog{position:absolute;left:0;top:0;bottom:0;background:var(--spritely);border-radius:6px;width:0}
+  .scrub .knob{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);left:0;box-shadow:0 0 0 3px #0008}
+  .chapters{position:absolute;inset:0}
+  .chapters i{position:absolute;top:-2px;width:2px;height:10px;background:#00000080}
+  .time{font-family:var(--f-mono);font-size:12px;color:#cfc9de;min-width:96px;text-align:right}
+  .chip-title{position:fixed;top:18px;left:20px;z-index:40;font-family:var(--f-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#ffffff88;transition:opacity .4s;display:flex;gap:10px;align-items:center}
+  .chip-title::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--chip,#9C7BFF)}
+  .bigplay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(6,4,12,.58);cursor:pointer}
+  .bigplay .circ{width:104px;height:104px;border-radius:50%;background:#ffffff18;border:1px solid #ffffff30;display:grid;place-items:center;backdrop-filter:blur(4px)}
+  .bigplay .circ svg{margin-left:8px}
+  .bigplay .hint{position:absolute;bottom:60px;left:0;right:0;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#ffffff77}
+  .bigplay.hide{display:none}
+  .replay{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(6,4,12,.6);cursor:pointer}
+  .replay.show{display:grid}
+  .replay .box{display:grid;justify-items:center;gap:14px}
+  .replay .circ{width:74px;height:74px;border-radius:50%;background:#ffffff18;border:1px solid #ffffff30;display:grid;place-items:center}
+  .replay .r{font-family:var(--f-display);font-weight:700;font-size:22px;color:#fff}
+
+  @media (prefers-reduced-motion:reduce){
+    .in,.out,.type,.bar,.press,.dots i,.cat .cell,.composer .caret{animation:none!important;opacity:1!important;transform:none!important}
+    .type{width:auto!important}
+    .bar{width:var(--w)!important}
+    /* an element that arrives and later steps back shows only its final state: gone */
+    .in.out{display:none!important}
+  }
+</style>
+
+<div class="frame" id="frame">
+  <div class="screen" id="screen">
+
+    <!-- 1 · COLD OPEN -->
+    <section class="scene on" data-dur="14" data-chap="Spritely" style="--accent:#9C7BFF">
+      <div class="inner row">
+        <div class="col" style="flex:1.2">
+          <div class="glyph in" style="--t:.1s;width:4.4em;height:4.4em;font-size:2.4em;border-radius:1.1em">S</div>
+          <div class="eyebrow in" style="--t:.7s;margin-top:1.6em">Fortnite Sprite Info &amp; Trading · Staff briefing</div>
+          <h1 class="in" style="--t:1.1s;font-size:5.8em">Spritely —<br>the full tour.</h1>
+          <p class="lead in" style="--t:2s;margin-top:1em">The sprite side of the server: the catalogue, collections, trading, Sprite Operations and Thursdays. Just over ten minutes.</p>
+          <p class="kick in" style="--t:9.5s;margin-top:1.4em">Member names are invented.</p>
+        </div>
+        <div class="col">
+          <div class="dc sm in pop" style="--t:5.5s;max-width:30em;margin-left:auto">
+            <div class="dc-head"><span class="hash">#</span> sprite-chat</div>
+            <div class="msg"><div class="av p1">K</div><div class="mb"><div class="mname">Kai <span class="mtime">Today at 18:02</span></div><div class="mtext">Got Gold Tails last night, adding it now</div></div></div>
+            <div class="msg in still" style="--t:7s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/index</span></div>
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 18:03</span></div>
+              <div class="embed" style="--ebar:#2E9E5B"><div class="et">Indexed</div><div class="ed"><b>Gold Tails</b> added to your collection.
+2 mastered, 18 indexed, 61 you can get.</div></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 · WHAT IT IS FOR -->
+    <section class="scene" data-dur="30" data-chap="What it is for" style="--accent:#9C7BFF">
+      <div class="inner row">
+        <div class="col" style="flex:1.05">
+          <div class="eyebrow in">The one thing a website cannot do</div>
+          <h2 class="in" style="--t:.3s">It knows what<br>everybody holds.</h2>
+          <p class="big in" style="--t:1.2s">A checklist site can tell you what you are missing. Spritely can tell you <b style="color:var(--ink)">who in this server has it</b> — and what of yours they are missing.</p>
+          <p class="note in" style="--t:12s;margin-top:1.4em">A collection is the player's, not the server's. Index once and <code>/my</code> works in every server Spritely is in.</p>
+          <p class="note in" style="--t:20s;margin-top:1em"><code>/top</code> and <code>/trade</code> only ever show people who share a server with whoever asked.</p>
+        </div>
+        <div class="col">
+          <div class="stack">
+            <div class="card in left" style="--t:3s"><div class="row" style="gap:1em"><div class="av p1" style="font-size:1.1em">K</div><div><h4>Kai</h4><p><span class="mono" style="color:#3BA55D">holds</span> Gold Klombo &nbsp;·&nbsp; <span class="mono" style="color:#ED4245">needs</span> Cheat Bush</p></div></div></div>
+            <div class="card in left" style="--t:4.6s"><div class="row" style="gap:1em"><div class="av p2" style="font-size:1.1em">J</div><div><h4>Jordan</h4><p><span class="mono" style="color:#3BA55D">holds</span> Cheat Bush &nbsp;·&nbsp; <span class="mono" style="color:#ED4245">needs</span> Gold Klombo</p></div></div></div>
+            <div class="card in left" style="--t:6.2s"><div class="row" style="gap:1em"><div class="av p3" style="font-size:1.1em">P</div><div><h4>Priya</h4><p><span class="mono" style="color:#3BA55D">holds</span> Gold Klombo, Cheat Bush &nbsp;·&nbsp; <span class="mono" style="color:#ED4245">needs</span> Loot Crown</p></div></div></div>
+            <div class="in" style="--t:8.5s;text-align:center"><span class="badge">Kai ↔ Jordan is a straight swap. The bot can see it because it holds all three lists.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 · THE CATALOGUE -->
+    <section class="scene" data-dur="45" data-chap="The catalogue" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:.95">
+          <div class="eyebrow in">The catalogue</div>
+          <h2 class="in" style="--t:.3s">16 sprites.<br>4 forms.</h2>
+          <div class="tiles in" style="--t:1s;margin:.6em 0 1.2em">
+            <div class="tstat"><b>64</b><span>cells on the grid</span></div>
+            <div class="tstat in" style="--t:24s"><b style="color:var(--ink-3)">3</b><span>are forms that do not exist</span></div>
+            <div class="tstat in" style="--t:27s"><b style="color:var(--spritely)">61</b><span>you can actually get</span></div>
+          </div>
+          <p class="note in" style="--t:25s">Every sprite comes in all four forms except <b>Mega Man</b>, which is Normal only. A dash means <b>not in the game</b> — never <b>you have not got it</b> — so nobody is chasing a form that was never made.</p>
+          <div class="in" style="--t:31s;margin-top:1.4em">
+            <h3>Two states per cell, and they are separate</h3>
+            <div class="marks" style="margin-top:.4em">
+              <div class="mk in" style="--t:32s"><i>✅</i><span><b style="color:var(--ink)">Indexed</b> — you said you hold it, via <code>/index</code></span></div>
+              <div class="mk in" style="--t:34.5s"><i>👑</i><span><b style="color:var(--ink)">Mastered</b> — marked afterwards, from the button on <code>/my</code></span></div>
+            </div>
+            <p class="note in" style="--t:37.5s;margin-top:.8em">Mastering requires indexing — a form goes on the card first, and only then can it be marked mastered. The bot holds that line whatever the menu is asked for.</p>
+          </div>
+        </div>
+        <div class="col in" style="--t:.6s">
+          <div class="cat" id="catgrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 · INDEXING -->
+    <section class="scene" data-dur="45" data-chap="Indexing" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.25">
+          <div class="dc in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> sprite-chat</div>
+            <div class="msg"><div class="av p1">K</div><div class="mb"><div class="mname">Kai <span class="mtime">Today at 18:02</span></div><div class="mtext">Got Gold Tails last night, adding it now</div></div></div>
+
+            <div style="display:grid">
+            <div class="ac in out still" style="grid-area:1/1;--t:1.6s;--t2:5.1s">
+              <div class="h">Commands matching <span class="mono">/in</span></div>
+              <div class="opt hi"><span class="c">/index</span><span class="d">Add a sprite to your collection</span><span class="ap">Spritely</span></div>
+            </div>
+            <div class="ac in out still" style="grid-area:1/1;--t:5.4s;--t2:9.3s">
+              <div class="h">sprite</div>
+              <div class="opt hi"><span class="c">Tails</span></div>
+              <div class="opt"><span class="c">Adventure</span></div>
+              <div class="opt"><span class="c">Bush</span></div>
+            </div>
+            <div class="ac in out still" style="grid-area:1/1;--t:9.6s;--t2:13.4s">
+              <div class="h">variant · Which form — leave it off for the standard one</div>
+              <div class="opt"><span class="c">Normal</span></div>
+              <div class="opt hi"><span class="c">Gold</span></div>
+              <div class="opt"><span class="c">Cheatmaster</span></div>
+              <div class="opt"><span class="c">Loot Hacker</span></div>
+            </div>
+            </div>
+            <div class="composer">
+              <span class="plus">+</span>
+              <span class="in out still" style="--t:0s;--t2:13.8s"><span class="type" style="--n:6;--t:.6s">/index</span><span class="type" style="--n:13;--t:4.4s"> sprite:Tails</span><span class="type" style="--n:13;--t:8.6s"> variant:Gold</span></span><span class="caret"></span>
+            </div>
+
+            <div class="msg in still" style="--t:14s;margin-top:.9em"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/index</span></div>
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 18:03</span></div>
+              <div class="embed" style="--ebar:#2E9E5B"><div class="et">Indexed</div><div class="ed"><b>Gold Tails</b> added to your collection.
+2 mastered, 18 indexed, 61 you can get.
+
+Mark it mastered from the button on <code>/my</code>.</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+
+            <div class="msg in still" style="--t:28s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/index</span> <span class="mono">sprite: Mega Man · variant: Loot Hacker</span></div>
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 18:04</span></div>
+              <div class="embed" style="--ebar:#D5303E"><div class="ed">There's no <b>Loot Mega Man</b> in the game.
+It comes in: Normal.</div></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">Indexing</div>
+          <h2 class="in" style="--t:.3s">Type it, pick it,<br>it is on your card.</h2>
+          <div class="list" style="margin-top:1.2em">
+            <div class="li in" style="--t:6s"><span class="n">01</span><span>The sprite list is the catalogue — <b>an unknown name is refused, never created</b>. A collection where a typo can mint a sprite is a collection nobody can compare.</span></div>
+            <div class="li in" style="--t:10.5s"><span class="n">02</span><span>The form list only offers the forms <b>that sprite actually has</b>, in the game's own words — Cheatmaster, Loot Hacker.</span></div>
+            <div class="li in" style="--t:18s"><span class="n">03</span><span>The reply is <b>only visible to them</b> and says the running total: mastered, indexed, and the 61 they can get.</span></div>
+            <div class="li in" style="--t:31s"><span class="n">04</span><span>And it <b>checks the name again when it runs</b>, not only in the pop-up list — so a form that does not exist is refused, and the reply says which forms do.</span></div>
+          </div>
+          <p class="kick in" style="--t:39s;margin-top:1.4em">Somebody banned from indexing is told the reason on the spot, not left with a bot that looks broken.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · /my, /sprite, /compare, /privacy -->
+    <section class="scene" data-dur="48" data-chap="Your card" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.05">
+          <div class="dc in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> sprite-chat</div>
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/my</span></div>
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 18:05</span></div>
+              <div class="embed" style="--ebar:#FF3D8B;max-width:none">
+                <div class="thumb violet round"></div>
+                <div class="et">Kai — Sprite Collection</div>
+                <div class="pre in still" style="--t:.8s">  Trading
+Normal | Gold | Cheat | Loot
+👑 Mastered   ✅ Have It
+❌ Not Yet   ➖ Not in the Game
+
+Sprites
+Tails      |✅|✅|❌|❌
+Adventure  |👑|❌|❌|❌
+Bush       |✅|❌|❌|❌
+Shadow     |❌|❌|❌|❌
+Jackrabbit |✅|✅|❌|❌
+Jonesy     |👑|✅|❌|✅
+Sonic      |✅|❌|❌|❌
+Klombo     |❌|❌|❌|❌
+Crown      |✅|❌|❌|❌
+Killswitch |✅|❌|❌|❌
+8-Bit      |✅|✅|✅|❌
+Storm Scout|❌|❌|❌|❌
+X-Ray      |✅|❌|❌|❌
+Onigiri    |❌|❌|❌|❌
+Overshield |✅|❌|❌|❌
+Mega Man   |✅|➖|➖|➖
+
+<span style="display:inline-flex;gap:.15em;vertical-align:middle"><i style="width:1.3em;height:.8em;background:#9C7BFF;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#9C7BFF;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#9C7BFF;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i><i style="width:1.3em;height:.8em;background:#2a2540;border-radius:.15em"></i></span>
+<b>3%</b> — 2 of 61 mastered, 18 indexed
+Trading for Gold Klombo — DM me</div>
+              </div>
+              <div class="btns in still" style="--t:2.2s"><span class="btn pri">👑 Master a Sprite</span><span class="btn grey">Trading Note</span></div>
+              <div class="btns in still" style="--t:2.6s;margin-top:.4em"><span class="btn grey">Collected</span><span class="btn grey">Missing</span><span class="btn grey">Mastered</span><span class="btn grey">Not Mastered</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1.1">
+          <div class="eyebrow in">/my · /sprite · /compare · /privacy</div>
+          <h2 class="in" style="--t:.3s" >One card, built<br>from the catalogue.</h2>
+          <p class="note in" style="--t:1.4s">Every sprite, every form, whether they hold it or not — built from the <b>catalogue</b>, filled in from their rows, so the columns they are missing are on it. Posted publicly, because a trading card nobody can see is not a trading card. The buttons are the owner's alone.</p>
+
+          <div class="dc sm in out" style="--t:12s;--t2:23.6s;margin-top:1em">
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/sprite</span> <span class="mono">name: Tails · variant: Gold</span></div>
+              <div class="embed" style="--ebar:#FFC93C"><div class="thumb"></div><div class="et">Gold Tails</div><div class="ed"><b>Gain 3x bonus XP from eliminations</b>
+
+Lets you hover in the air.</div>
+                <div class="ef"><div class="k">Rarity</div><div class="v">Epic</div></div><div class="ef"><div class="k">Form</div><div class="v">Gold</div></div></div>
+              <div class="btns"><span class="btn grey">Normal</span><span class="btn pri off">Gold</span><span class="btn grey">Cheat</span><span class="btn grey">Loot</span><span class="btn grey">All Sprites</span></div>
+            </div></div>
+          </div>
+
+          <div class="dc sm in out" style="--t:24s;--t2:36.5s;margin-top:.8em">
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/compare</span> <span class="mono">member: @Jordan</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">You and Jordan</div><div class="ed"><b>18</b> of 61 · <b>23</b> of 61</div>
+                <div class="ef block"><div class="k">⬅️  They have, you do not — 9</div><div class="v">Gold Bush, Normal Shadow, Gold Sonic, Normal Klombo, Gold Klombo, Normal Storm Scout, Normal Onigiri, Cheat Onigiri <i>and 1 more</i></div></div>
+                <div class="ef block"><div class="k">➡️  You have, they do not — 4</div><div class="v">Cheat 8-Bit, Gold Jackrabbit, Normal X-Ray, Normal Overshield</div></div>
+                <div class="ef"><div class="k">🤝  Both of you — 14</div></div><div class="ef"><div class="k">⬜  Neither — 34</div></div>
+                <div class="efoot">You each have something the other is missing</div></div>
+            </div></div>
+          </div>
+
+          <div class="dc sm in" style="--t:37s;margin-top:.8em">
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/privacy</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">You are on the public board</div><div class="ed">Your name and collection size can appear on a public leaderboard.
+
+<code>/privacy show:False</code> turns that off.
+
+<i>Inside Discord, <code>/top</code> and <code>/trade</code> only ever show people who share a server with whoever asked, and always have.</i></div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · THE TABLE -->
+    <section class="scene" data-dur="42" data-chap="The table" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.2">
+          <div class="dc in" style="--t:0s;font-size:.9em">
+            <div class="dc-head"><span class="hash">#</span> sprite-index-0041 <span class="tick">ticket</span></div>
+            <div class="msg"><div class="av p4">M</div><div class="mb"><div class="mname">Morgan <span class="mtime">Today at 19:40</span></div>
+              <div class="pre in still" style="--t:.6s">✅ = Obtained        ❌ = Need
+👑 = Mastered        💀 = N/A
+
+│  BASE  │ GOLD  │ CHEAT  │ HACKER  │
+
+│✅|✅|❌|❌| Tails
+│👑|❌|❌|❌| Adventure
+│👑👑|👑|❌| Bush
+│❌|❌|❌|❌| Shadow
+│✅|✅|❌|❌| Jackrabbit
+│✅|❌|❌|❌| Crown
+│✅❌|❌|❌| Onigiri
+│✅|💀|💀|💀| Mega Man
+   ⋯ the other eight rows ⋯</div>
+            </div></div>
+            <div class="in still" style="--t:5s;margin-left:3.3em"><span class="dots"><i></i><i></i><i></i></span> <span style="color:#949ba4;font-size:.8em">Spritely is reading the table…</span></div>
+            <div class="msg in still" style="--t:7.5s"><div class="av bot">S</div><div class="mb">
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 19:41</span></div>
+              <div class="mtext"><span class="pill">@Morgan</span></div>
+              <div class="embed" style="--ebar:#D5303E;max-width:none"><div class="et">Almost — one small fix</div><div class="ed">Almost — 2 lines need a small fix before we can run it.
+
+<b>Every box needs a <code>|</code> between it and the next</b>, and there are four boxes on every line.
+
+<b>These:</b></div>
+                <div class="pre">│👑👑|👑|❌| Bush
+│✅❌|❌|❌| Onigiri</div>
+                <div class="ed">Should be:</div>
+                <div class="pre">│👑|👑|👑|❌| Bush</div>
+                <div class="ed">Not <code>│👑👑|👑|❌| Bush</code> — that is three boxes, and we cannot tell which form is which.
+
+Fix those lines and paste the whole table again. 👑 mastered, ✅ have it, ❌ do not, 💀 that form does not exist.
+
+<b>Or just use this</b> — <i style="color:#949ba4">their table, pre-filled with what we already hold for them</i></div>
+                <div class="efoot">One message, the whole block, and keep every | where it is</div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">The indexing ticket</div>
+          <h2 class="in" style="--t:.3s">Paste the table.<br>It reads it.</h2>
+          <p class="note in" style="--t:1.5s">A member opens a sprite-index ticket and pastes the published table. Spritely reads every answered ticket <b>within the minute</b> — a member who has just pasted is sitting there looking at the channel.</p>
+          <div class="list" style="margin-top:1.2em">
+            <div class="li in" style="--t:9s"><span class="n">→</span><span>It <b>names every line</b> it could not read, not the first one — one round trip instead of three.</span></div>
+            <div class="li in" style="--t:14s"><span class="n">→</span><span>On a phone the header wraps onto two lines — <b>the bot copes</b>: sixteen rows outvote one line.</span></div>
+            <div class="li in" style="--t:20s"><span class="n">→</span><span>Other people's formats read too: shortcodes like <code>:crown:</code>, box-drawing bars, a table with its own key at the top, two tables side by side, <code>Base / Gold / Cheat / Hacker</code> headings.</span></div>
+            <div class="li in" style="--t:27s"><span class="n">→</span><span>A line ending <code>Klom…</code> is a <b>cut-off table</b>, not a typo — copied off the screen rather than out of the message. It gets its own card.</span></div>
+            <div class="li in" style="--t:33s"><span class="n">→</span><span>Nothing here writes to a collection. The advice is posted <b>once per table</b>, and a corrected paste is read again.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 · THE LEADERBOARD AND WANTS -->
+    <section class="scene" data-dur="36" data-chap="The leaderboard" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col">
+          <div class="eyebrow in">/top · /want</div>
+          <h2 class="in" style="--t:.3s">A tracker with a<br>table in it is a race.</h2>
+          <div class="lb in" style="--t:1.5s;margin-top:1em">
+            <div class="lr"><span class="rk">🥇</span><span class="who">Priya</span><div class="track"><div class="bar" style="--w:72%;--t:2s"></div></div><span class="val">44/61 · 👑 20</span></div>
+            <div class="lr"><span class="rk">🥈</span><span class="who">Jordan</span><div class="track"><div class="bar" style="--w:38%;--t:2.3s"></div></div><span class="val">23/61 · 👑 6</span></div>
+            <div class="lr"><span class="rk">🥉</span><span class="who">Kai</span><div class="track"><div class="bar" style="--w:30%;--t:2.6s"></div></div><span class="val">18/61 · 👑 2</span></div>
+            <div class="lr"><span class="rk">04</span><span class="who">Morgan</span><div class="track"><div class="bar" style="--w:23%;--t:2.9s"></div></div><span class="val">14/61</span></div>
+            <div class="lr"><span class="rk">05</span><span class="who">Noor</span><div class="track"><div class="bar" style="--w:18%;--t:3.2s"></div></div><span class="val">11/61 · 👑 1</span></div>
+          </div>
+          <p class="note in" style="--t:6s;margin-top:1.2em">Ranked by forms held out of the <b>61 that exist</b>, mastered breaks the tie. Fifteen rows, and if you are not on it the card says where you are — nobody is "unranked". Only members of this server, ever.</p>
+          <p class="note in" style="--t:22s;margin-top:.8em"><b>Wants</b> are the other half. Up to 30 per person, they travel with the player, and one is refused if you already hold it or the form does not exist. Get the sprite and the want <b>deletes itself</b>.</p>
+        </div>
+        <div class="col">
+          <div class="dc sm in" style="--t:8s">
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/top</span> <span class="mono">member: @Kai</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Kai</div><div class="ed"><b>#3</b> of 9 here
+<span class="mono">███░░░░░░░</span> <b>18</b> of 61 · 👑 2 mastered</div></div>
+            </div></div>
+            <div class="msg in still" style="--t:12s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/top</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Biggest collections here</div><div class="ed">🥇 <b>Priya</b> — 44/61 · 👑 20
+🥈 <b>Jordan</b> — 23/61 · 👑 6
+🥉 <b>Kai</b> — 18/61 · 👑 2
+<code> 4</code> <b>Morgan</b> — 14/61
+<code> 5</code> <b>Noor</b> — 11/61 · 👑 1</div><div class="efoot">9 collector(s) here · 61 forms to collect</div></div>
+            </div></div>
+          </div>
+          <div class="dc sm in" style="--t:24s;margin-top:.8em">
+            <div class="composer" style="margin-top:0"><span class="plus">+</span><span class="type" style="--n:33;--t:24.5s">/want add sprite:Klombo form:Gold</span><span class="caret"></span></div>
+            <div class="msg in still" style="--t:28s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#2E9E5B"><div class="ed"><b>Gold Klombo</b> is on your list.</div></div>
+            </div></div>
+            <div class="msg in still" style="--t:31s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Jordan</b> used <span class="cmd">/want list</span> <span class="mono">member: @Kai</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Kai is after</div><div class="ed">• <b>Gold Bush</b>
+• <b>Gold Klombo</b></div><div class="efoot">2 of 30</div></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 · THE TRADE -->
+    <section class="scene" data-dur="52" data-chap="The trade" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.25">
+          <div class="dc in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> trading</div>
+            <div class="composer" style="margin-top:0"><span class="plus">+</span><span class="type" style="--n:18;--t:.5s">/trade who:@Jordan</span><span class="caret"></span></div>
+            <div class="msg in still" style="--t:3s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/trade</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Jordan</div><div class="ed">What do you want to do?
+
+<b>See what they have</b> — just look. Nothing moves.
+<b>Trade with them</b> — pick one sprite each. They have to say yes.</div></div>
+              <div class="btns"><span class="btn grey">See what they have</span><span class="btn pri press" style="--t:6.5s">Trade with them</span></div>
+            </div></div>
+            <div class="msg in out still" style="--t:8s;--t2:15.3s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">What do you want from them?</div><div class="ed">Pick one. That is the sprite that will move to you if they say yes.</div></div>
+              <div class="sel"><span>What do you want from them?</span><span class="chev">▾</span></div>
+              <div class="sel-list in still" style="--t:10s"><div class="o">Gold Bush</div><div class="o">Shadow</div><div class="o">Gold Sonic</div><div class="o">Klombo</div><div class="o hi press" style="--t:13s">Gold Klombo</div><div class="o">Storm Scout</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+            <div class="msg in out still" style="--t:15.5s;--t2:21.8s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">What will you give them?</div><div class="ed">You want <b>Gold Klombo</b>.
+
+Now pick what they get. Or press the bottom button if they are just giving it to you.</div></div>
+              <div class="sel picked"><span>Cheatmaster 8-Bit</span><span class="chev">▾</span></div>
+              <div class="btns"><span class="btn grey">Nothing — I just want that one</span></div>
+            </div></div>
+            <div class="msg in still" style="--t:22s"><div class="av bot">S</div><div class="mb">
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 18:31</span></div>
+              <div class="mtext"><span class="pill">@Jordan</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Kai wants to trade with Jordan</div><div class="ed"><b>Kai</b> gets <b>Gold Klombo</b>
+<b>Jordan</b> gets <b>Cheatmaster 8-Bit</b>
+
+<b>Jordan</b> — press Yes if this already happened in game.</div></div>
+              <div class="btns"><span class="btn grn press" style="--t:30s">Yes, do it</span><span class="btn red">No</span></div>
+            </div></div>
+            <div class="msg in still" style="--t:32s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#2E9E5B"><div class="et">Done</div><div class="ed"><b>Kai</b> gets <b>Gold Klombo</b>
+<b>Jordan</b> gets <b>Cheatmaster 8-Bit</b>
+
+Both collections have been updated.</div></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">/trade</div>
+          <h2 class="in" style="--t:.3s">Tag one person.<br>Two menus. Yes.</h2>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:9s"><span class="n">01</span><span>The first menu is <b>what they have that you do not</b>. The second is what you have that they do not. Built from the catalogue, so a form that does not exist never appears.</span></div>
+            <div class="li in" style="--t:17s"><span class="n">02</span><span>A one-way hand-over is a button, not a trick — <b>"Nothing — I just want that one."</b></span></div>
+            <div class="li in" style="--t:24s"><span class="n">03</span><span>The offer is posted in the channel and <b>only the other person can press Yes</b>. Yes means "this already happened in game" — it moves the index.</span></div>
+            <div class="li in" style="--t:34s"><span class="n">04</span><span>Holdings are <b>re-checked at accept</b>, so a sprite already traded away cannot be handed over twice.</span></div>
+          </div>
+          <div class="card in" style="--t:41s;margin-top:1.3em;border-color:var(--warn)">
+            <h4 style="color:var(--warn)">Matchmaking, not brokering</h4>
+            <p>The hand-off happens in Fortnite between two players. The bot records it. There is no price, no currency, no credit and no payment anywhere in it — nothing of real-world value passes through Spritely.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 · SPRITE OPERATIONS · THE CREW -->
+    <section class="scene" data-dur="32" data-chap="Sprite Operations · the crew" style="--accent:#4A8CFF">
+      <div class="inner">
+        <div class="wip in" style="--t:0s;margin-bottom:1em"><b>Work in progress</b><span><b style="font-family:var(--f-body);font-size:1em;letter-spacing:0;text-transform:none;color:var(--ink)">Not final.</b> This is where Sprite Operations is going — details can still change. We just want to show you.</span></div>
+        <div class="row top">
+        <div class="col">
+          <div class="eyebrow in" style="color:var(--util)">Sprite Operations · who</div>
+          <h2 class="in" style="--t:.3s">The crew comes<br>off the roster.</h2>
+          <p class="note in" style="--t:1.4s">Spritely reads the staff roster — position or second position — so a Moderator who is also a Sprite Distributor counts. Nobody is a Distributor because of a Discord role.</p>
+          <p class="note in" style="--t:12s;margin-top:.8em">The Head and the Lead Distributor <b>run the day</b>: they can work any Distributor's list. Distributors work their own.</p>
+          <div class="dc sm in" style="--t:19s;margin-top:.9em;font-size:.8em">
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Alex</b> used <span class="cmd">/distributor status</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Sprite Operations</div>
+                <div class="ef block"><div class="k">Queue</div><div class="v">12 waiting · 5 on lists · 40 done · 3 not there</div></div>
+                <div class="ef block"><div class="k">Head</div><div class="v">@Alex</div></div>
+                <div class="ef block"><div class="k">Distributors</div><div class="v">@Morgan → @Jordan, @Sam, @Priya</div></div>
+                <div class="ef block"><div class="k">Mastery</div><div class="v">@Kai → @Morgan</div></div>
+                <div class="ef block"><div class="k">Hunters</div><div class="v"><i>nobody</i> → @Sam</div></div>
+                <div class="ef"><div class="k">Panel</div><div class="v">#request-a-sprite</div></div>
+                <div class="ef"><div class="k">Week turns</div><div class="v">Thu 16:00 London · now Sat 11:20</div></div>
+                <div class="efoot">crew from the roster</div></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1.15">
+          <div class="tree" style="--accent:#4A8CFF">
+            <div class="seat head in" style="--t:3s"><div class="t">Head of Sprite Operations</div><div class="p">runs the team</div></div>
+            <div class="wire in" style="--t:4.2s"></div>
+            <div class="lvl">
+              <div class="seat in" style="--t:4.6s"><div class="t">Lead Sprite Distributor</div><div class="p">runs the day</div></div>
+              <div class="seat in" style="--t:5.1s"><div class="t">Lead Sprite Mastery</div><div class="p">on the roster</div></div>
+              <div class="seat in" style="--t:5.6s"><div class="t">Lead Sprite Hunter</div><div class="p">on the roster</div></div>
+            </div>
+            <div class="wire in" style="--t:6.4s"></div>
+            <div class="lvl">
+              <div class="seat in" style="--t:6.8s"><div class="t">Sprite Distributors</div><div class="p">pull lists of five</div><span class="hat">Moderator + second hat</span></div>
+              <div class="seat in" style="--t:7.3s"><div class="t">Sprite Mastery</div><div class="p">on the roster</div></div>
+              <div class="seat in" style="--t:7.8s"><div class="t">Sprite Hunters</div><div class="p">on the roster</div></div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 · THE MEMBER SIDE -->
+    <section class="scene" data-dur="46" data-chap="Sprite Operations · the member" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.2">
+          <div class="dc in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> request-a-sprite</div>
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">posted once</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Request a sprite</div><div class="ed">Press the button, pick up to <b>two</b>, tell us your Epic name. That is it.
+
+A Sprite Distributor comes to you in game, oldest request first. <code>/queue</code> shows where you are.
+Be around when they do — a request nobody turns up for costs you the next week.</div></div>
+              <div class="btns"><span class="btn pri press" style="--t:3s">Request a sprite</span></div>
+            </div></div>
+            <div class="msg in out still" style="--t:4.5s;--t2:12.3s"><div class="av bot">S</div><div class="mb">
+              <div class="mtext">Pick up to <b>2</b>. <i style="color:#949ba4">(Loot and Cheat forms: ask in a sprite-index ticket.)</i></div>
+              <div class="sel"><span>Which sprites?</span><span class="chev">▾</span></div>
+              <div class="sel-list in still" style="--t:6.5s"><div class="o off">Normal Tails</div><div class="o off">Normal Adventure</div><div class="o on press" style="--t:8.5s">Normal Klombo</div><div class="o off">Normal Crown</div><div class="o on press" style="--t:10s">Gold Sonic</div><div class="o off">Gold Adventure</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+            <div class="modal in out pop" style="--t:12.5s;--t2:17.3s;margin:.8em 0 .8em 3.3em">
+              <div class="mt">Your Epic name</div>
+              <div class="ml">Epic display name, so they can add you</div>
+              <div class="mi"><b>KaiPlays</b> <span class="ph"> ← filled in from last time</span></div>
+              <div class="mbtns"><span class="btn grey">Cancel</span><span class="btn pri press" style="--t:16s">Submit</span></div>
+            </div>
+            <div class="msg in still" style="--t:17.5s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#2E9E5B"><div class="et">Requested</div><div class="ed">In the queue — you are <b>#7</b>. A Distributor will add you in game; be around. <code>/queue</code> any time.</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+            <div class="msg in still" style="--t:26s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/queue</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Your queue</div><div class="ed">#7 in the queue — <b>Normal Klombo</b> · asked 2 minutes ago
+#8 in the queue — <b>Gold Sonic</b> · asked 2 minutes ago
+
+2/2 used · served oldest first.</div></div>
+              <div class="sel"><span>Take one back</span><span class="chev">▾</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">Sprite Operations · the member</div>
+          <h2 class="in" style="--t:.3s">Button. Menu.<br>Epic name. Done.</h2>
+          <p class="note in" style="--t:1.5s">Members do three things and nothing after. The panel is posted once, in the request channel, and stays there.</p>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:7s"><span class="n">01</span><span>Up to <b>two open requests</b> at once. The menu shows the first 25 sprite-and-form pairs; Loot and Cheat forms go through a ticket, and the menu says so.</span></div>
+            <div class="li in" style="--t:13.5s"><span class="n">02</span><span>The Epic name is <b>remembered and pre-filled</b> next time. 3 to 16 characters, letters and numbers.</span></div>
+            <div class="li in" style="--t:20s"><span class="n">03</span><span>Two picked together go in a fixed order, and both go in or neither does — a member who picked two <b>gets two or a reason</b>.</span></div>
+            <div class="li in" style="--t:28s"><span class="n">04</span><span><code>/queue</code> shows the place, or whose list they are on, and lets them <b>take one back</b> while it is still waiting.</span></div>
+          </div>
+          <div class="dc sm in" style="--t:36s;margin-top:1.2em">
+            <div class="msg"><div class="av bot">S</div><div class="mb"><div class="embed" style="--ebar:#D5303E"><div class="ed">Not yet — requests open today at 16:00 London time.</div></div></div></div>
+          </div>
+          <p class="kick in" style="--t:39s;margin-top:.8em">Thursday morning, before the week turns, the button says so.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 · THE DISTRIBUTOR SIDE -->
+    <section class="scene" data-dur="56" data-chap="Sprite Operations · the Distributor" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col">
+          <div class="eyebrow in">Sprite Operations · the Distributor</div>
+          <h2 class="in" style="--t:.3s">Five at a time,<br>oldest first.</h2>
+          <div class="wip sm in" style="--t:.8s;margin-top:.4em"><b>Work in progress</b><span>Still not final — the Distributor side can change before it goes live.</span></div>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:5s"><span class="n">01</span><span><code>/distributor list</code> pulls the <b>oldest five open requests for things they hold</b> — read off their own collection.</span></div>
+            <div class="li in" style="--t:11s"><span class="n">02</span><span><b>Never their own</b> request, and never something they do not hold. Two Distributors who both hold it cannot both take the same one.</span></div>
+            <div class="li in" style="--t:17s"><span class="n">03</span><span><b>Refused mid-list</b>: "you still have 3 on your list — finish those first." The next five come from the button on the DM.</span></div>
+            <div class="li in" style="--t:24s"><span class="n">04</span><span>It goes to their <b>DMs</b> because it carries members' Epic names. DMs shut? It comes back in the channel, visible only to them.</span></div>
+            <div class="li in" style="--t:31s"><span class="n">05</span><span>Two marks and no more: <b>Complete</b> frees the member's slot. <b>Not complete</b> drops it and they sit out next week. The member is told in one line.</span></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1.2">
+          <div class="dc sm in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> distributors</div>
+            <div class="composer" style="margin-top:0"><span class="plus">+</span><span class="type" style="--n:17;--t:.6s">/distributor list</span><span class="caret"></span></div>
+            <div class="msg in still" style="--t:3s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#2E9E5B"><div class="ed">Pulled <b>5</b> — sent to your DMs.</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+          </div>
+          <div class="dc sm in" style="--t:6s;margin-top:.8em">
+            <div class="dc-head"><span class="dm">@ Jordan</span><span class="tick">direct message</span></div>
+            <div class="msg in out still" style="--t:6.2s;--t2:33.6s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#FF3D8B;max-width:none"><div class="et">Your list — pulled 5</div><div class="ed">1. @Morgan — <b>Normal Sonic</b> · Epic <b>morgan_fn</b> · asked 3 days ago
+2. @Noor — <b>Gold Jonesy</b> · Epic <b>NoorNR</b> · asked 2 days ago
+3. @Sam — <b>Normal Klombo</b> · Epic <b>Sam.Plays</b> · asked yesterday
+4. @Kai — <b>Normal Klombo</b> · Epic <b>KaiPlays</b> · asked 2 hours ago
+5. @Kai — <b>Gold Sonic</b> · Epic <b>KaiPlays</b> · asked 2 hours ago
+
+Add them in game, hand it over, then mark it here. <b>Not complete</b> means they did not turn up — it drops it and they sit out next week.</div>
+                <div class="efoot">12 waiting · 5 on lists · 40 done · 3 not there</div></div>
+              <div class="sel in still" style="--t:8s"><span>✅ Complete — handed over</span><span class="chev">▾</span></div>
+              <div class="sel in still" style="--t:8.4s"><span>❌ Not complete — they did not turn up</span><span class="chev">▾</span></div>
+            </div></div>
+            <div class="msg in still" style="--t:34s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Your list</div><div class="ed"><i>Your list is empty.</i> <b>7</b> waiting that you can serve.</div><div class="efoot">12 waiting · 0 on lists · 44 done · 4 not there</div></div>
+              <div class="btns"><span class="btn pri press" style="--t:37s">Pull the next 5</span></div>
+            </div></div>
+          </div>
+          <div class="dc sm in" style="--t:40s;margin-top:.9em">
+            <div class="dc-head"><span class="dm">@ Kai</span><span class="tick">direct message · the member is told</span></div>
+            <div class="msg"><div class="av bot">S</div><div class="mb"><div class="embed" style="--ebar:#2E9E5B"><div class="ed"><b>Gold Sonic</b> is done — @Jordan has marked it handed over. You can request again.</div></div></div></div>
+            <div class="msg in still" style="--t:46s"><div class="av bot">S</div><div class="mb"><div class="embed" style="--ebar:#D5303E"><div class="ed">@Jordan marked <b>Normal Klombo</b> as not complete — you were not there when they came. No requests next week; back the Thursday after.</div></div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · THE NO-SHOW BAR AND THE WEEK -->
+    <section class="scene" data-dur="36" data-chap="Sprite Operations · fairness" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col">
+          <div class="eyebrow in">The week, and the bar</div>
+          <h2 class="in" style="--t:.3s">Oldest first is the<br>whole fairness rule.</h2>
+          <p class="note in" style="--t:1.4s">No priority column. No command that reorders. No queue-jumping for anybody, and nothing a Distributor can do about the order except serve it.</p>
+          <div class="tl" style="margin-top:1.5em">
+            <div class="ev in" style="--t:6s"><div class="w">THURSDAY 16:00 · LONDON</div><h4>The week turns</h4><p>London time, so the clocks going forward or back never move it.</p></div>
+            <div class="ev in" style="--t:13s"><div class="w">NOT COMPLETE</div><h4>The request is dropped</h4><p>The Distributor's call, made from the DM. The member did not turn up.</p></div>
+            <div class="ev in" style="--t:19s"><div class="w">THE FOLLOWING WEEK</div><h4>Barred — that week only</h4><p>A drop in <b>last</b> week bars them <b>this</b> week. Not for ever, and not the same week it happened.</p></div>
+            <div class="ev in" style="--t:25s"><div class="w">THE THURSDAY AFTER</div><h4>Back in</h4><p>Their slot is theirs again. Nobody has to lift anything.</p></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="dc sm in" style="--t:15s">
+            <div class="dc-head"><span class="hash">#</span> request-a-sprite</div>
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#D5303E"><div class="ed">Last week's Distributor marked you as not there, so no requests this week. Back on Thursday.</div></div>
+              <div class="eph"><span class="eye">👁</span> Only you can see this</div>
+            </div></div>
+            <div class="msg in still" style="--t:21s"><div class="av bot">S</div><div class="mb">
+              <div class="used"><b>Kai</b> used <span class="cmd">/queue</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">Your queue</div><div class="ed"><i>Nothing in the queue.</i>
+
+0/2 used · served oldest first.
+
+⛔ <b>Barred this week</b> — last week's Distributor marked you as not there. Back on Thursday.</div></div>
+            </div></div>
+          </div>
+          <div class="card in" style="--t:29s;margin-top:1.2em">
+            <h4>What a member can do about a queue</h4>
+            <p>Ask for up to two. Take one back. Be there. That is the list — and it is the same list for every one of 4,600 members.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 · DISTRIBUTORS POSTING THEIR LIST -->
+    <section class="scene" data-dur="36" data-chap="Distributors' lists" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.2">
+          <div class="dc in" style="--t:0s">
+            <div class="dc-head"><span class="hash">#</span> distributor-lists <span class="tick">a watched channel</span></div>
+            <div class="msg"><div class="av p2">J</div><div class="mb"><div class="mname">Jordan <span class="mtime">Today at 21:04</span></div>
+              <div class="mtext">Updated list after tonight</div>
+              <div class="pre in still" style="--t:.8s">│  BASE  │ GOLD  │ CHEAT  │ HACKER  │
+│👑|✅|✅|❌| Tails
+│👑|✅|❌|❌| Adventure
+│👑|👑|✅|❌| Bush
+│✅|✅|❌|❌| Shadow
+│👑|✅|❌|❌| Crown
+   ⋯ and the rest ⋯</div>
+            </div></div>
+            <div class="in still" style="--t:4s;margin-left:3.3em"><span class="dots"><i></i><i></i><i></i></span></div>
+            <div class="msg in still" style="--t:6s"><div class="av bot">S</div><div class="mb">
+              <div class="mname">Spritely <span class="tag">APP</span><span class="mtime">Today at 21:04</span></div>
+              <div class="embed" style="--ebar:#2E9E5B;max-width:none"><div class="et">Your list</div><div class="ed">Read that and updated your collection — <b>3</b> new forms and <b>1</b> newly mastered.
+
+You are on <b>26 of 61 forms</b> · <b>7</b> mastered
+
+<code>/my</code> to see it.</div>
+                <div class="img in still" style="--t:8s">
+                  <div class="board">
+                    <div class="bh"><b>Jordan · Collected</b><span>26 of 61 · 7 mastered</span></div>
+                    <div class="chips"><i>26 sprites</i><i>26/61 collected</i><i>7/61 mastered</i></div>
+                    <div class="br"><div class="art"></div><div class="nm">Tails<small>Epic · 3 of 4</small></div><div class="fm"><i class="m">Normal</i><i class="h">Gold</i><i class="h">Cheat</i><i>Loot</i></div></div>
+                    <div class="br"><div class="art c"></div><div class="nm">Crown<small>Mythic · 2 of 4</small></div><div class="fm"><i class="m">Normal</i><i class="h">Gold</i><i>Cheat</i><i>Loot</i></div></div>
+                    <div style="color:#8B82B8;font-size:.78em;padding:.2em .3em">⋯ one row per sprite · your-sprites.png</div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">Distributors posting their list</div>
+          <h2 class="in" style="--t:.3s">Post it where you<br>already post it.</h2>
+          <p class="note in" style="--t:1.5s">Distributors publish their list every time it changes. Spritely reads it <b>in the watched channels</b> and applies it to <b>the person who typed it</b> — there is no "on behalf of", because a channel where a message can write to someone else's collection is a channel where anybody can.</p>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:10s"><span class="n">→</span><span><b>Two numbers, and only the first is ever zero:</b> what changed, and what they now hold. A repost that already matches says "nothing to change" rather than "0 forms".</span></div>
+            <div class="li in" style="--t:18s"><span class="n">→</span><span>The picture is drawn <b>from what they now hold</b> — not from what was read — so a wrong line is visible rather than something to go looking for.</span></div>
+            <div class="li in" style="--t:25s"><span class="n">→</span><span>Only Distributors, only in the watched channels. The same list posted twice in a minute is read once. A trade post with a <code>|</code> in it is not a failed list.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 · THURSDAYS -->
+    <section class="scene" data-dur="30" data-chap="Thursdays" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col">
+          <div class="eyebrow in">Thursdays</div>
+          <h2 class="in" style="--t:.3s">New sprites land<br>on a Thursday.</h2>
+          <div class="tl" style="margin-top:1.1em;gap:.9em">
+            <div class="ev in" style="--t:2s"><div class="w">THURSDAY</div><h4>They land</h4><p>New sprites, and new forms of old ones, arrive on Thursdays. When the New this week sheet goes up, they are in — from then, <code>/index</code> and <code>/my</code> offer them.</p></div>
+            <div class="ev in" style="--t:8s"><div class="w">THE SAME DAY</div><h4>The drop sheet</h4><p>Spritely posts the <b>"New this week"</b> card in the drops channel, one tile per new sprite. That is the list — point a member there before anywhere else.</p></div>
+            <div class="ev in" style="--t:14s"><div class="w">THEN</div><h4>Members add what they have</h4><p><code>/my</code> to see the new rows on their card, <code>/index</code> to log the ones they have found.</p></div>
+            <div class="ev in" style="--t:20s"><div class="w">AND POWER HOURS</div><h4>Two cards</h4><p>One the day before, one when each hour starts — next scene.</p></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1.05">
+          <div class="dc sm in" style="--t:9s">
+            <div class="dc-head"><span class="hash">#</span> sprite-drops <span class="tick">Thursday</span></div>
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="mtext"><span class="pill">@Sprite Drops</span></div>
+              <div class="embed" style="--ebar:#FF3D8B"><div class="et">New this week</div><div class="ed"><b>3 new sprites this week.</b>
+Use <code>/my</code> to add the ones you have, and <code>/index</code> to log a form.</div>
+                <div class="img"><div class="board" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4em"><div class="bh" style="grid-column:1/-1;margin:0"><b>NEW THIS WEEK</b><span>new-this-week.png</span></div>
+                  <div style="background:#141033;border:1px solid #2A2350;border-radius:.35em;padding:.4em;text-align:center"><div style="width:2.2em;height:2.2em;border-radius:.3em;margin:0 auto .3em;background:radial-gradient(circle at 35% 30%,#a8f0ff,#2BE8FF 60%,#0d6b7a)"></div><small>NEW SPRITE · NORMAL</small></div>
+                  <div style="background:#141033;border:1px solid #2A2350;border-radius:.35em;padding:.4em;text-align:center"><div style="width:2.2em;height:2.2em;border-radius:.3em;margin:0 auto .3em;background:radial-gradient(circle at 35% 30%,#ffd76a,#e8912a 60%,#7a3f0c)"></div><small>NEW SPRITE · GOLD</small></div>
+                  <div style="background:#141033;border:1px solid #2A2350;border-radius:.35em;padding:.4em;text-align:center"><div style="width:2.2em;height:2.2em;border-radius:.3em;margin:0 auto .3em;background:radial-gradient(circle at 35% 30%,#e3b3ff,#C42BFF 60%,#4d0d6e)"></div><small>NEW SPRITE · CHEAT</small></div>
+                </div></div>
+              </div>
+            </div></div>
+            <div class="msg in still" style="--t:16s"><div class="av p1">K</div><div class="mb"><div class="mname">Kai <span class="mtime">Thursday at 14:12</span></div><div class="mtext">wait is the new one out already?</div></div></div>
+            <div class="msg in still" style="--t:18.5s"><div class="av p4">M</div><div class="mb"><div class="mname">Morgan <span class="mtime">Thursday at 14:12</span></div><div class="mtext">yep — it's on the sheet above. <code>/index</code> it when you've got it</div></div></div>
+          </div>
+          <p class="kick in" style="--t:24s;margin-top:1em">A member asks "what came out?" — the sheet. Nothing else to check.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 · POWER HOURS -->
+    <section class="scene" data-dur="32" data-chap="Thursdays · Power Hours" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col">
+          <div class="eyebrow in">Power Hours</div>
+          <h2 class="in" style="--t:.3s">The day before,<br>and when it starts.</h2>
+          <p class="note in" style="--t:1.4s">Epic's own Power Hours tile from the in-game news tab, with the start times on it. Each session is <b>two hours</b>.</p>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:7s"><span class="n">01</span><span>The <b>day before</b>, Eastern time: one "TOMORROW" card with the times sorted. No ping.</span></div>
+            <div class="li in" style="--t:13s"><span class="n">02</span><span>When an hour <b>starts</b>: the same art again as "LIVE NOW", with the end time. This is the one that pings.</span></div>
+            <div class="li in" style="--t:19s"><span class="n">03</span><span>Each session is posted <b>once</b> — no repeats, and no blank card if the picture is missing.</span></div>
+          </div>
+        </div>
+        <div class="col" style="flex:1.05">
+          <div class="dc sm in" style="--t:8s">
+            <div class="dc-head"><span class="hash">#</span> power-hours</div>
+            <div class="msg"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#FFC93C"><div class="ea">TOMORROW</div><div class="et">POWER HOURS</div><div class="ed"><b>It's coming.</b>
+double XP and double Sprite Dust
+
+Don't forget — if you find sprites you don't have, add them to your collection with <code>/index</code>.</div>
+                <div class="ef"><div class="k">First hour</div><div class="v">Thursday 17 September 2026 19:00
+in 20 hours</div></div><div class="ef"><div class="k">Hour 2</div><div class="v">Thursday 17 September 2026 23:00
+in 24 hours</div></div>
+                <div class="img" style="height:5em;background:linear-gradient(135deg,#1a0b3a,#4a1d96 50%,#ffb03a);display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-weight:800;letter-spacing:.05em">POWER HOURS</div></div>
+            </div></div>
+            <div class="msg in still" style="--t:14s"><div class="av bot">S</div><div class="mb">
+              <div class="mtext"><span class="pill">@Power Hours</span></div>
+              <div class="embed" style="--ebar:#FFC93C"><div class="ea">LIVE NOW</div><div class="et">POWER HOURS</div><div class="ed"><b>It's on.</b>
+double XP and double Sprite Dust
+
+Don't forget — if you find sprites you don't have, add them to your collection with <code>/index</code>.</div>
+                <div class="ef"><div class="k">Until</div><div class="v">21:00 · in 2 hours</div></div></div>
+            </div></div>
+          </div>
+          <div class="card in" style="--t:22s;margin-top:.9em">
+            <h4>A member asks when Power Hours are</h4>
+            <p>The TOMORROW card in the power-hours channel has every time, in their own timezone. Point them there.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 · LOBBY HACKS -->
+    <section class="scene" data-dur="36" data-chap="Lobby hacks" style="--accent:#9C7BFF">
+      <div class="inner row top">
+        <div class="col" style="flex:1.2">
+          <div class="dc in" style="--t:0s">
+            <div class="composer in out still" style="margin-top:0;--t:0s;--t2:2.3s"><span class="plus">+</span><span class="type" style="--n:11;--t:.5s">/lobbyhacks</span><span class="caret"></span></div>
+            <div class="msg in still" style="--t:2.5s"><div class="av bot">S</div><div class="mb">
+              <div class="embed" style="--ebar:#8b6df0;max-width:none"><div class="et">Fortnite lobby hack codes</div><div class="ed">You have redeemed <b>4</b> of <b>30</b>.
+
+Enter these in the lobby — the cheat code box on the Sprites screen. Tick one off here and it stays ticked for you in every server Spritely is in.</div>
+                <div class="ef block in still" style="--t:4s"><div class="k">👾 Sprites — 2/7</div><div class="v">✅ <code>JonesyIsGolden</code> — <s>Gold Jonesy Sprite</s>
+⬜ <code>Born2Play</code> — Cheat Master Adventure Sprite
+⬜ <code>8BitBlast</code> — Cheat Master 8-Bit Sprite
+✅ <code>GottaGoFast</code> — <s>Cheat Master Sonic Sprite</s>
+⬜ <code>IWannaFlyHigh</code> — Cheat Master Tails Sprite
+⬜ <code>GatherAndCraft</code> — Cheat Master Bush Sprite
+　　<i>Finish the required "Wrixel's Get Crafty" story quests first</i>
+<i style="color:#949ba4">⋯ one more ⋯</i></div></div>
+                <div class="ef block in still" style="--t:6s"><div class="k">🖼️ Loading screens &amp; locker items — 0/3</div><div class="v">⬜ <code>YourThoughtsAreMine</code> — Void Master Geno style + 5,000 Sprite Dust
+⬜ <code>BeMoreAlien</code> — Override Ready Loading Screen <i style="color:#949ba4">⋯ one more ⋯</i></div></div>
+                <div class="ef block in still" style="--t:8s"><div class="k">🎁 Consumable resources — 2/16</div><div class="v">✅ <code>DustInTheWind</code> — <s>5,000 Sprite Dust</s>
+✅ <code>OverrideXP</code> — <s>40,000 XP</s> <i style="color:#949ba4">⋯ fourteen more ⋯</i></div></div>
+                <div class="ef block in still" style="--t:10s"><div class="k">🎉 Fun effects — 0/4</div><div class="v">⬜ <code>BRB</code> — Turns you into a toilet
+⬜ <code>InsertCoinToContinue</code> — Turns all party members into props <i style="color:#949ba4">⋯ two more ⋯</i></div></div>
+                <div class="efoot">Codes from fortnite.gg · only you can see this</div></div>
+              <div class="sel in still" style="--t:12s"><span style="color:#f2f3f5">👾 Sprites</span><span class="chev">▾</span></div>
+              <div class="sel in still" style="--t:12.4s"><span>Tick the sprites you have redeemed</span><span class="chev">▾</span></div>
+              <div class="btns in still" style="--t:12.8s"><span class="btn grey">✅ Tick everything</span><span class="btn grey">↩️ Clear everything</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="eyebrow in">/lobbyhacks</div>
+          <h2 class="in" style="--t:.3s">Which of these<br>have I already done?</h2>
+          <p class="note in" style="--t:1.5s">A code redeems once per account, the list is thirty long, and half of them are the same reward. The one question a web page cannot answer is the only thing this stores.</p>
+          <div class="list" style="margin-top:1.1em">
+            <div class="li in" style="--t:14s"><span class="n">01</span><span>Four groups: <b>Sprites, Loading screens &amp; locker items, Consumable resources, Fun effects</b>. The condition under a code is kept — a code you have not unlocked yet is not a code that does not work.</span></div>
+            <div class="li in" style="--t:21s"><span class="n">02</span><span>Marking used and un-marking are the same action: <b>the selection is the state</b>, one group at a time, so opening Sprites cannot silently clear sixteen resources.</span></div>
+            <div class="li in" style="--t:27s"><span class="n">03</span><span>Thirty codes, kept up to date by hand, and <b>a code is never taken off the list</b>. Ticked follows the person, like a collection — tick it once and it stays ticked everywhere.</span></div>
+          </div>
+          <p class="kick in" style="--t:32s;margin-top:1.2em">Always only visible to the person who asked.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 17 · CLOSE -->
+    <section class="scene" data-dur="16" data-chap="Close" style="--accent:#9C7BFF">
+      <div class="inner">
+        <div class="glyph in" style="--t:.1s">S</div>
+        <h1 class="in" style="--t:.8s;font-size:5.4em;margin-top:.35em">That is Spritely.</h1>
+        <p class="lead in" style="--t:2s;margin-top:.9em;max-width:40ch">Index it, look it up, trade it, request it, and let Thursday run itself. The bot holds the lists so people do not have to.</p>
+        <div class="list in" style="--t:5s;margin-top:1.6em;max-width:44em">
+          <div class="li"><span class="n">→</span><span>A member asks "where is my sprite?" — <code>/queue</code>. Oldest first, no exceptions.</span></div>
+          <div class="li in" style="--t:7s"><span class="n">→</span><span>A table will not read — the bot has already said which line. Point them at it.</span></div>
+          <div class="li in" style="--t:9s"><span class="n">→</span><span>A member asks what came out — the "New this week" sheet in the drops channel. Nothing else to check.</span></div>
+        </div>
+        <p class="kick in" style="--t:12s;margin-top:1.6em">Questions — bring them to the meeting.</p>
+      </div>
+    </section>
+
+    <div class="chip-title" id="chapname">Spritely</div>
+  </div>
+
+  <div class="bigplay" id="bigplay"><div class="circ"><svg width="34" height="38" viewBox="0 0 30 34"><path d="M0 0l30 17L0 34z" fill="#fff"/></svg></div><div class="hint">Space to play · arrows to skip scenes</div></div>
+  <div class="replay" id="replay"><div class="box"><div class="circ"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v5h-5"/></svg></div><div class="r">Watch again</div></div></div>
+
+  <div class="hud" id="hud">
+    <button class="ctrl" id="play" aria-label="Play or pause">▶</button>
+    <div class="scrub" id="scrub"><div class="chapters" id="chapters"></div><div class="prog" id="prog"></div><div class="knob" id="knob"></div></div>
+    <span class="time" id="time">0:00 / 0:00</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- the catalogue grid, built from the seed and the forms table ----
+  var SPRITES = [
+    // 16 sprites, 4 forms each — except Mega Man, which is Normal only (production catalogue, 13 Sep 2026)
+    ['Tails','Epic',4],['Adventure','Rare',4],['Bush','Rare',4],['Shadow','Epic',4],['Jackrabbit','Legendary',4],
+    ['Jonesy','Rare',4],['Sonic','Epic',4],['Klombo','Mythic',4],['Crown','Mythic',4],['Killswitch','Epic',4],
+    ['8-Bit','Rare',4],['Storm Scout','Rare',4],['X-Ray','Legendary',4],['Onigiri','Rare',4],['Overshield','Rare',4],['Mega Man','Rare',1]
+  ];
+  var FORMS = ['Normal','Gold','Cheat','Loot'];
+  var g = document.getElementById('catgrid');
+  var html = '<div></div>' + FORMS.map(function(f){ return '<div class="ch">'+f+'</div>'; }).join('');
+  var k = 0;
+  SPRITES.forEach(function(s, r){
+    html += '<div class="rn">'+s[0]+'<i>'+s[1]+'</i></div>';
+    for (var c = 0; c < 4; c++){
+      var exists = c < s[2];
+      var t = (1.2 + k*0.32).toFixed(2);
+      var cls = exists ? 'yes' : 'no';
+      var mark = exists ? '✓' : '➖';
+      html += '<div class="cell '+cls+'" style="--t:'+t+'s">'+mark+'</div>';
+      k++;
+    }
+  });
+  g.innerHTML = html;
+  // the two states, arriving when the copy about them does
+  var cells = g.querySelectorAll('.cell');
+  function paint(idx, cls, mark, at){
+    var el = cells[idx]; if(!el) return;
+    var d = document.createElement('div'); d.className='cell '+cls; d.textContent=mark; d.style.setProperty('--t', at+'s');
+    d.style.position='absolute'; d.style.inset='0'; d.style.height='auto';
+    el.style.position='relative'; el.appendChild(d);
+  }
+  paint(1,'ix','✅',32.4); paint(4,'ms','👑',34.9); paint(9,'ix','✅',33); paint(21,'ms','👑',35.4);
+
+  // ---- transport ----
+  var scenes = Array.prototype.slice.call(document.querySelectorAll('.scene'));
+  var durs = scenes.map(function(s){ return (parseFloat(s.getAttribute('data-dur'))||10)*1000; });
+  var total = durs.reduce(function(a,b){return a+b;},0);
+  var starts = []; (function(){ var t=0; durs.forEach(function(d){ starts.push(t); t+=d; }); })();
+  var frame=document.getElementById('frame'), screenEl=document.getElementById('screen');
+  var prog=document.getElementById('prog'), knob=document.getElementById('knob'), timeEl=document.getElementById('time'), playBtn=document.getElementById('play');
+  var chapname=document.getElementById('chapname'), bigplay=document.getElementById('bigplay'), replay=document.getElementById('replay');
+  var scrub=document.getElementById('scrub');
+
+  // 1em inside the stage = 1% of its width, so everything scales with the letterbox
+  function fit(){ screenEl.style.fontSize = (screenEl.getBoundingClientRect().width/100)+'px'; }
+  window.addEventListener('resize', fit); fit();
+
+  var ch=document.getElementById('chapters');
+  starts.forEach(function(st,idx){ if(idx===0) return; var i=document.createElement('i'); i.style.left=(st/total*100)+'%'; ch.appendChild(i); });
+
+  var elapsed=0, last=null, playing=false, i=-1, raf=null;
+  function fmt(ms){ var s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+  function sceneFor(ms){ for(var k=scenes.length-1;k>=0;k--){ if(ms>=starts[k]) return k; } return 0; }
+  function setScene(n, force){
+    if(n===i && !force) return;
+    i=n;
+    var off = elapsed - starts[i];
+    scenes.forEach(function(s,k){ s.classList.remove('on'); });
+    // restart the scene's animations, offset to where the clock is in it
+    void screenEl.offsetWidth;
+    scenes[i].style.setProperty('--off', (-(off/1000)).toFixed(3)+'s');
+    scenes[i].classList.add('on');
+    chapname.textContent = scenes[i].getAttribute('data-chap')||'';
+    var acc = getComputedStyle(scenes[i]).getPropertyValue('--accent').trim() || '#9C7BFF';
+    prog.style.background = acc; chapname.style.setProperty('--chip', acc);
+  }
+  function render(){
+    var pct = (elapsed/total*100);
+    prog.style.width=pct+'%'; knob.style.left=pct+'%';
+    timeEl.textContent=fmt(elapsed)+' / '+fmt(total);
+    setScene(sceneFor(elapsed));
+  }
+  function tick(ts){
+    if(!playing) return;
+    if(last==null) last=ts;
+    elapsed += ts-last; last=ts;
+    if(elapsed>=total){ elapsed=total; render(); stop(true); return; }
+    render(); raf=requestAnimationFrame(tick);
+  }
+  function play(){
+    if(elapsed>=total){ elapsed=0; i=-1; }
+    playing=true; last=null; frame.classList.add('playing');
+    bigplay.classList.add('hide'); replay.classList.remove('show'); playBtn.textContent='❚❚';
+    render(); raf=requestAnimationFrame(tick); wake();
+  }
+  function pause(){ playing=false; last=null; if(raf)cancelAnimationFrame(raf); frame.classList.remove('playing'); frame.classList.remove('idle'); playBtn.textContent='▶'; }
+  function stop(ended){ pause(); if(ended){ replay.classList.add('show'); } }
+  function toggle(){ playing?pause():play(); }
+  function seek(ms){
+    elapsed=Math.min(total, Math.max(0, ms));
+    replay.classList.remove('show');
+    if(elapsed>=total){ elapsed=total-1; }
+    var n = sceneFor(elapsed); setScene(n, true); render();
+    if(!playing){ bigplay.classList.add('hide'); }
+  }
+
+  playBtn.addEventListener('click', function(e){ e.stopPropagation(); toggle(); });
+  bigplay.addEventListener('click', function(){ elapsed=0; i=-1; play(); });
+  replay.addEventListener('click', function(){ elapsed=0; i=-1; play(); });
+  function scrubAt(clientX){ var r=scrub.getBoundingClientRect(); seek((clientX-r.left)/r.width*total); }
+  var dragging=false;
+  scrub.addEventListener('pointerdown', function(e){ dragging=true; scrub.setPointerCapture(e.pointerId); scrubAt(e.clientX); });
+  scrub.addEventListener('pointermove', function(e){ if(dragging) scrubAt(e.clientX); });
+  scrub.addEventListener('pointerup', function(){ dragging=false; });
+  scrub.addEventListener('pointercancel', function(){ dragging=false; });
+  document.addEventListener('keydown', function(e){
+    if(e.key===' '||e.key==='k'){ e.preventDefault(); toggle(); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); seek(starts[Math.min(scenes.length-1, i+1)]); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); var back = (elapsed - starts[i] > 1500) ? starts[i] : starts[Math.max(0,i-1)]; seek(back); }
+    else if(e.key==='Home'){ seek(0); }
+  });
+  // swipe on touch: left = next scene, right = previous
+  var tx=null, ty=null;
+  screenEl.addEventListener('touchstart', function(e){ var t=e.changedTouches[0]; tx=t.clientX; ty=t.clientY; }, {passive:true});
+  screenEl.addEventListener('touchend', function(e){
+    if(tx==null) return; var t=e.changedTouches[0]; var dx=t.clientX-tx, dy=t.clientY-ty; tx=null;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5){ if(dx<0) seek(starts[Math.min(scenes.length-1, i+1)]); else seek(starts[Math.max(0,i-1)]); }
+    else if(Math.abs(dx)<8 && Math.abs(dy)<8){ toggle(); }
+  }, {passive:true});
+  screenEl.addEventListener('click', function(e){ if(e.target.closest('.hud')) return; if(window.matchMedia('(pointer:fine)').matches) toggle(); });
+
+  // hide the HUD when idle while playing
+  var idleT; function wake(){ frame.classList.remove('idle'); clearTimeout(idleT); idleT=setTimeout(function(){ if(playing) frame.classList.add('idle'); },2800); }
+  document.addEventListener('mousemove', wake); document.addEventListener('touchstart', wake, {passive:true}); wake();
+
+  // if the tab is hidden, pause the clock so the CSS animations and the master clock cannot drift apart
+  document.addEventListener('visibilitychange', function(){ if(document.hidden && playing) pause(); });
+
+  elapsed=0; setScene(0, true); render();
+})();
+</script>
