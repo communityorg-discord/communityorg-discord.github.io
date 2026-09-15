@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dion M. and Evan S.</title>
+  <meta name="description" content="Dion M. and Evan S. — Fortnite Sprite Info &amp; Trading.">
+  <meta name="theme-color" content="#0c071b">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --night: #0c071b;
+      --paper: #f6f4fa;
+      --ink: #171225;
+      --mute: #5c566e;
+      --line: #ddd6ea;
+      --card: #fff;
+      --violet: #805dff;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      font: 17px/1.55 "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    main {
+      width: min(760px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 72px 0 80px;
+    }
+    .mark {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin: 0 0 14px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(34px, 6vw, 52px);
+      line-height: 1.05;
+      letter-spacing: -.03em;
+    }
+    .lede { margin: 0 0 40px; color: var(--mute); max-width: 38em; }
+    .people {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 0 0 36px;
+    }
+    @media (max-width: 640px) { .people { grid-template-columns: 1fr; } }
+    article {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 22px 22px 20px;
+    }
+    article h2 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.02em; }
+    article .who { margin: 0 0 12px; color: var(--mute); font-size: 14px; }
+    article p { margin: 0; color: var(--ink); }
+    .about p { margin: 0 0 12px; color: var(--mute); }
+    .about p:last-child { margin: 0; }
+    footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--mute);
+      font-size: 13px;
+    }
+    a { color: var(--violet); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="mark">Fortnite Sprite Info &amp; Trading</p>
+    <h1>Dion M. and Evan S.</h1>
+    <p class="lede">We run the Discord server and the two bots on it. This page is the public face of that — who we are, and what we are responsible for.</p>
+
+    <div class="people">
+      <article>
+        <h2>Dion M.</h2>
+        <p class="who">Owner</p>
+        <p>Server, Spritely, and the day-to-day of how the place is run.</p>
+      </article>
+      <article>
+        <h2>Evan S.</h2>
+        <p class="who">Owner</p>
+        <p>Staff, Utilities, and how moderation and tickets actually work.</p>
+      </article>
+    </div>
+
+    <div class="about">
+      <p><strong>Fortnite Sprite Info &amp; Trading</strong> is a community Discord for Fortnite sprites — collecting, indexing, trading, and the staff team that keeps it usable.</p>
+      <p><strong>Spritely</strong> is the sprite bot: catalogue, who has what, the leaderboard, trading, and Sprite Operations requests. <strong>Utilities</strong> is the server bot: tickets, staff records, moderation, reports, and the protection in the background.</p>
+      <p>Both are fan projects. They are not made by, endorsed by, or connected to Epic Games.</p>
+      <p>Spritely’s public page is <a href="https://sprites.codes">sprites.codes</a>.</p>
+    </div>
+
+    <footer>dionmevans.me · Dion M. and Evan S.</footer>
+  </main>
+</body>
+</html>
